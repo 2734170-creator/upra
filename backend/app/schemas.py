@@ -9,6 +9,9 @@ from app.models import (
     CounterpartyType,
     TransactionType,
     PayrollStatus,
+    MovementType,
+    DdsSection,
+    PnlImpact,
 )
 
 
@@ -92,6 +95,13 @@ class CategoryCreate(BaseModel):
     type: CategoryType
     parent_id: Optional[int] = None
     is_pnl: bool = False
+    code: Optional[str] = None
+    movement_type: Optional[MovementType] = None
+    dds_section: Optional[DdsSection] = None
+    pnl_article_id: Optional[int] = None
+    pnl_impact: Optional[PnlImpact] = None
+    is_active: bool = True
+    comment: Optional[str] = None
 
 
 class CategoryOut(BaseModel):
@@ -100,6 +110,26 @@ class CategoryOut(BaseModel):
     type: CategoryType
     parent_id: Optional[int]
     is_pnl: bool
+    code: Optional[str] = None
+    movement_type: Optional[MovementType] = None
+    dds_section: Optional[DdsSection] = None
+    pnl_article_id: Optional[int] = None
+    pnl_article_name: Optional[str] = None
+    pnl_impact: Optional[PnlImpact] = None
+    is_active: bool = True
+    comment: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+class CategoryTreeNode(BaseModel):
+    id: int
+    name: str
+    code: Optional[str] = None
+    movement_type: Optional[MovementType] = None
+    dds_section: Optional[DdsSection] = None
+    children: list["CategoryTreeNode"] = []
 
     class Config:
         from_attributes = True

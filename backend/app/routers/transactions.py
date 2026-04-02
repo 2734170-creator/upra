@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from datetime import date
 from app.dependencies import get_db
-from app.models import Transaction
+from app.models import Transaction, Category, PnlImpact
 from app.schemas import TransactionCreate, TransactionUpdate, TransactionOut
 
 router = APIRouter(prefix="/api/transactions", tags=["transactions"])
@@ -37,6 +37,26 @@ async def create_transaction(
 ):
     tx = Transaction(**data.model_dump())
     db.add(tx)
+    await db.flush()
+
+    if data.category_id:
+        cat = await db.get(Category, data.category_id)
+        if (
+            cat
+            and cat.pnl_impact in (PnlImpact.income, PnlImpact.expense)
+            and cat.pnl_article_id
+        ):
+            from app.models import PnlEntry
+
+            entry = PnlEntry(
+                transaction_id=tx.id,
+                date=tx.date,
+                amount=tx.amount,
+                impact=cat.pnl_impact,
+                category_id=cat.pnl_article_id,
+            )
+            db.add(entry)
+
     await db.commit()
     await db.refresh(tx)
     return tx

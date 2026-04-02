@@ -8,6 +8,7 @@ from sqlalchemy import (
     ForeignKey,
     DateTime,
     Enum as SAEnum,
+    Text,
 )
 from sqlalchemy.orm import DeclarativeBase, relationship
 from sqlalchemy.sql import func
@@ -104,6 +105,24 @@ class Account(Base):
     bank_statements = relationship("BankStatement", back_populates="account")
 
 
+class MovementType(str, enum.Enum):
+    inflow = "inflow"
+    outflow = "outflow"
+
+
+class DdsSection(str, enum.Enum):
+    operating = "operating"
+    investing = "investing"
+    financing = "financing"
+    internal = "internal"
+
+
+class PnlImpact(str, enum.Enum):
+    income = "income"
+    expense = "expense"
+    none = "none"
+
+
 class Category(Base):
     __tablename__ = "categories"
 
@@ -112,8 +131,20 @@ class Category(Base):
     type = Column(SAEnum(CategoryType), nullable=False)
     parent_id = Column(Integer, ForeignKey("categories.id"), nullable=True)
     is_pnl = Column(Boolean, default=False)
+    code = Column(String(20), nullable=True)
+    movement_type = Column(SAEnum(MovementType), nullable=True)
+    dds_section = Column(SAEnum(DdsSection), nullable=True)
+    pnl_article_id = Column(Integer, ForeignKey("categories.id"), nullable=True)
+    pnl_impact = Column(SAEnum(PnlImpact), nullable=True)
+    is_active = Column(Boolean, default=True)
+    comment = Column(Text, nullable=True)
 
-    parent = relationship("Category", remote_side=[id], backref="children")
+    parent = relationship(
+        "Category", remote_side=[id], foreign_keys=[parent_id], backref="children"
+    )
+    pnl_article = relationship(
+        "Category", remote_side=[id], foreign_keys=[pnl_article_id]
+    )
     transactions = relationship("Transaction", back_populates="category")
     budget_items = relationship("BudgetItem", back_populates="category")
     rules = relationship("CategorizationRule", back_populates="category")
@@ -160,6 +191,21 @@ class Transaction(Base):
     category = relationship("Category", back_populates="transactions")
     cost_center = relationship("CostCenter", back_populates="transactions")
     counterparty = relationship("Counterparty", back_populates="transactions")
+    pnl_entries = relationship("PnlEntry", back_populates="transaction")
+
+
+class PnlEntry(Base):
+    __tablename__ = "pnl_entries"
+
+    id = Column(Integer, primary_key=True, index=True)
+    transaction_id = Column(Integer, ForeignKey("transactions.id"), nullable=False)
+    date = Column(Date, nullable=False)
+    amount = Column(Float, nullable=False)
+    impact = Column(SAEnum(PnlImpact), nullable=False)
+    category_id = Column(Integer, ForeignKey("categories.id"), nullable=False)
+
+    transaction = relationship("Transaction", back_populates="pnl_entries")
+    category = relationship("Category")
 
 
 class BudgetItem(Base):

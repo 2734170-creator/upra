@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Tabs, Table, Button, Modal, Form, Input, Select, Space, message, Popconfirm } from 'antd'
 import { PlusOutlined, DeleteOutlined, EditOutlined } from '@ant-design/icons'
+import CategoriesPage from './CategoriesPage'
 import api from '../api/client'
 
 function CrudPage({
@@ -214,21 +215,7 @@ export default function ReferencesPage() {
     {
       key: 'categories',
       label: 'Статьи ДДС',
-      children: (
-        <CrudPage
-          endpoint="/categories"
-          columns={[
-            { title: 'Название', dataIndex: 'name', key: 'name' },
-            { title: 'Тип', dataIndex: 'type', key: 'type', render: (v: string) => ({ income: 'Доход', expense: 'Расход' }[v] || v) },
-            { title: 'ОПиУ', dataIndex: 'is_pnl', key: 'is_pnl', render: (v: boolean) => (v ? 'Да' : 'Нет') },
-          ]}
-          formFields={[
-            { name: 'name', label: 'Название', rules: [{ required: true }] },
-            { name: 'type', label: 'Тип', type: 'select', rules: [{ required: true }], options: [{ value: 'income', label: 'Доход' }, { value: 'expense', label: 'Расход' }] },
-            { name: 'is_pnl', label: 'ОПиУ', type: 'select', options: [{ value: true, label: 'Да' }, { value: false, label: 'Нет' }] },
-          ]}
-        />
-      ),
+      children: <CategoriesPage />,
     },
     {
       key: 'cost_centers',
